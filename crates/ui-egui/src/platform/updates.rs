@@ -124,11 +124,13 @@ impl PdfCraftApp {
 
     /// Help ▸ Check for updates: ask for the latest release and show the outcome.
     pub fn check_for_updates(&mut self) {
-        #[cfg(not(target_arch = "wasm32"))]
+        #[cfg(not(any(target_arch = "wasm32", all(target_os = "macos", feature = "tauri-desktop"))))]
         {
             self.updates.open = true;
             self.updates.check_requested = true;
         }
+        #[cfg(all(target_os = "macos", feature = "tauri-desktop"))]
+        self.open_url("https://github.com/bjwim71/pdfcraft-desktop/actions/workflows/macos-desktop.yml");
         #[cfg(target_arch = "wasm32")]
         {
             self.open_url(RELEASES_PAGE);

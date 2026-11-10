@@ -177,7 +177,7 @@ impl RecoveryStore {
         }
         let env = |k: &str| std::env::var_os(k).filter(|v| !v.is_empty()).map(PathBuf::from);
         if cfg!(target_os = "macos") {
-            env("HOME").map(|h| h.join("Library/Application Support/PdfCraft/Recovery"))
+            env("HOME").map(|h| h.join("Library/Application Support").join(crate::portable::SETTINGS_APP_NAME).join("Recovery"))
         } else if cfg!(windows) {
             env("LOCALAPPDATA").map(|d| d.join("PdfCraft").join("Recovery"))
         } else {
@@ -200,7 +200,7 @@ pub fn default_dictionary_dir() -> Option<PathBuf> {
     }
     let env = |k: &str| std::env::var_os(k).filter(|v| !v.is_empty()).map(PathBuf::from);
     if cfg!(target_os = "macos") {
-        env("HOME").map(|h| h.join("Library/Application Support/PdfCraft/Dictionary"))
+        env("HOME").map(|h| h.join("Library/Application Support").join(crate::portable::SETTINGS_APP_NAME).join("Dictionary"))
     } else if cfg!(windows) {
         env("LOCALAPPDATA").map(|d| d.join("PdfCraft").join("Dictionary"))
     } else {

@@ -17,6 +17,9 @@ pub const MARKERS: [&str; 2] = ["portable.txt", "PdfCraft.portable"];
 /// The data folder created beside the executable in portable mode.
 pub const DATA_DIR: &str = "PdfCraftData";
 
+/// Settings and recovery namespace. The separate macOS bundle can run beside upstream PdfCraft.
+pub const SETTINGS_APP_NAME: &str = if cfg!(all(target_os = "macos", feature = "tauri-desktop")) { "PdfCraft-Desktop" } else { "PdfCraft" };
+
 /// The outcome of looking for a portable marker.
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct Portable {

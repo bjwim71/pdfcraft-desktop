@@ -1,0 +1,11 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "PdfCraft Desktop",
+  "identifier": "io.github.bjwim71.pdfcraft",
+  "app": {
+    "windows": []
+  },
+  "bundle": {
+    "icon": ["../../assets/app-icon/pdfcraft-1024.png"]
+  }
+}

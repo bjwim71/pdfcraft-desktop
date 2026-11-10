@@ -9,6 +9,10 @@ rust-version = "1.95"
 [lints]
 workspace = true
 
+[features]
+# Packaging-only settings for the separately distributed macOS app.
+tauri-desktop = []
+
 [dependencies]
 edit-session = { workspace = true }
 craft-ui = { workspace = true }

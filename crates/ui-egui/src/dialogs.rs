@@ -1684,10 +1684,13 @@ fn dialog_about(ui: &mut egui::Ui, req: &mut Pending) -> bool {
                 .small(),
             );
             ui.add_space(12.0);
+            #[cfg(not(all(target_os = "macos", feature = "tauri-desktop")))]
             ui.horizontal(|ui| {
                 ui.label(egui::RichText::new(tl!("Part of")).color(t.text_muted));
                 widgets::artcraft_logo(ui, 16.0);
             });
+            #[cfg(all(target_os = "macos", feature = "tauri-desktop"))]
+            ui.label(egui::RichText::new(tl!("Based on PdfCraft by the ArtCraft team.")).color(t.text_muted));
             ui.add_space(6.0);
             if let Some(cmd) = widgets::community_links(ui) {
                 req.link_command = Some(cmd);
