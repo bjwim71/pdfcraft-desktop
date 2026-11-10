@@ -33,6 +33,7 @@ use std::cell::Cell;
 use std::rc::Rc;
 
 use pdfcraft_ui_egui::PdfCraftApp;
+use pdfcraft_ui_egui::portable::SETTINGS_APP_NAME;
 
 #[cfg(target_os = "macos")]
 mod apple_events;
@@ -95,7 +96,7 @@ const LEGACY_STORAGE_KEY: &str = "printcraft";
 /// it is `PdfCraftData` beside the executable (#157). XDG desktops use the configuration base;
 /// other platforms retain eframe's PdfCraft folder. Logs and recovery stay in the data folder.
 fn settings_dir() -> Option<std::path::PathBuf> {
-    let legacy = eframe::storage_dir("PdfCraft");
+    let legacy = eframe::storage_dir(SETTINGS_APP_NAME);
     match settings::directory(
         cfg!(all(unix, not(target_os = "macos"))),
         pdfcraft_ui_egui::portable::data_dir(),
@@ -116,7 +117,7 @@ fn settings_dir() -> Option<std::path::PathBuf> {
 /// folder is left alone when the new one already exists or the move fails. A portable copy leaves
 /// the per-user folders alone.
 fn migrate_legacy_folders() {
-    if pdfcraft_ui_egui::portable::data_dir().is_some() {
+    if SETTINGS_APP_NAME != "PdfCraft" || pdfcraft_ui_egui::portable::data_dir().is_some() {
         return;
     }
     let mut moves = vec![(eframe::storage_dir("PrintCraft"), eframe::storage_dir("PdfCraft"))];
@@ -243,7 +244,7 @@ fn main() -> eframe::Result {
     // no file behind) and after the PrintCraft migration (which a fresh folder would block).
     // Records logged until now are written to it first.
     if let (Some(logger), Some(dir)) =
-        (logger, pdfcraft_ui_egui::portable::data_dir().map(std::path::Path::to_path_buf).or_else(|| eframe::storage_dir("PdfCraft")))
+        (logger, pdfcraft_ui_egui::portable::data_dir().map(std::path::Path::to_path_buf).or_else(|| eframe::storage_dir(SETTINGS_APP_NAME)))
     {
         match logger.attach_dir(&dir.join("logs")) {
             Ok(path) => log::info!("PdfCraft {}, log file {}", pdfcraft_engine::build_info::version(), path.display()),
@@ -473,7 +474,7 @@ fn app_creator<'a>(
             }
             app.motion.source = Some(motion::source());
         }
-        app.set_startup_update_check(true);
+        app.set_startup_update_check(!cfg!(all(target_os = "macos", feature = "tauri-desktop")));
         app.printer_source = Some(pdfcraft_ui_egui::system_printers());
         app.two_sided_source = Some(pdfcraft_ui_egui::system_two_sided());
         app.os_key_store_ids = cfg!(any(target_os = "macos", target_os = "windows"));
