@@ -10,6 +10,8 @@ if [[ "$(uname -s)" != Darwin || "$(uname -m)" != arm64 ]]; then
 fi
 
 HERE="$ROOT/packaging/macos-tauri"
+APP_NAME="$(plutil -extract productName raw -o - "$HERE/tauri.conf.json")"
+BUNDLE_ID="$(plutil -extract identifier raw -o - "$HERE/tauri.conf.json")"
 export MACOSX_DEPLOYMENT_TARGET=11.0
 export PDFCRAFT_BUILD_LABEL="${PDFCRAFT_BUILD_LABEL:-tauri}"
 PROFILE="${PDFCRAFT_DESKTOP_PROFILE:-release}"
@@ -21,7 +23,7 @@ CARGO_TARGET_DIR="$LAUNCHER_TARGET" cargo build --locked --release --manifest-pa
 WORK="$(mktemp -d "${TMPDIR:-/tmp}/pdfcraft-desktop.XXXXXX")"
 trap 'rm -rf "$WORK"' EXIT
 STAGE="$WORK/dmg"
-APP="$STAGE/PdfCraft Desktop.app"
+APP="$STAGE/$APP_NAME.app"
 EDITOR="$APP/Contents/Helpers/PdfCraft.app"
 RESOURCES="$EDITOR/Contents/Resources"
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources" "$EDITOR/Contents/MacOS" "$RESOURCES"
@@ -29,6 +31,7 @@ mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources" "$EDITOR/Contents/MacOS
 cp "$LAUNCHER_TARGET/release/pdfcraft-launcher" "$APP/Contents/MacOS/PdfCraft"
 cp "$CARGO_TARGET_DIR/$PROFILE/pdfcraft" "$EDITOR/Contents/MacOS/PdfCraft"
 cp "$ROOT/assets/app-icon/pdfcraft.icns" "$APP/Contents/Resources/PdfCraft.icns"
+cp "$HERE/THIRD-PARTY-NOTICES.txt" "$ROOT/LICENSE-APACHE" "$APP/Contents/Resources/"
 cp "$ROOT/assets/app-icon/pdfcraft.icns" "$RESOURCES/PdfCraft.icns"
 cp "$ROOT/packaging/macos/Credits.rtf" "$RESOURCES/"
 for file in NOTICE LICENSE-MIT LICENSE-APACHE; do
@@ -43,10 +46,10 @@ for bundle in "$APP" "$EDITOR"; do
 done
 
 PLIST=/usr/libexec/PlistBuddy
-"$PLIST" -c 'Set :CFBundleIdentifier io.github.bjwim71.pdfcraft' -c 'Set :CFBundleDisplayName PdfCraft Desktop' \
-  -c 'Set :CFBundleName PdfCraft Desktop' -c 'Add :LSUIElement bool true' "$APP/Contents/Info.plist"
+"$PLIST" -c "Set :CFBundleIdentifier $BUNDLE_ID" -c "Set :CFBundleDisplayName $APP_NAME" \
+  -c "Set :CFBundleName $APP_NAME" -c 'Add :LSUIElement bool true' "$APP/Contents/Info.plist"
 # The editor can receive explicit opens and Dock drops. Finder offers the launcher under Open With.
-"$PLIST" -c 'Set :CFBundleIdentifier io.github.bjwim71.pdfcraft.editor' \
+"$PLIST" -c "Set :CFBundleIdentifier $BUNDLE_ID.editor" \
   -c 'Set :CFBundleDocumentTypes:0:LSHandlerRank None' "$EDITOR/Contents/Info.plist"
 plutil -lint "$APP/Contents/Info.plist" "$EDITOR/Contents/Info.plist"
 
@@ -74,7 +77,7 @@ MOUNT="$WORK/mounted"
 mkdir -p "$MOUNT"
 hdiutil attach -readonly -nobrowse -mountpoint "$MOUNT" "$DMG" >/dev/null
 trap 'hdiutil detach "$MOUNT" >/dev/null || true; rm -rf "$WORK"' EXIT
-codesign --verify --deep --strict "$MOUNT/PdfCraft Desktop.app"
+codesign --verify --deep --strict "$MOUNT/$APP_NAME.app"
 test -L "$MOUNT/Applications"
 hdiutil detach "$MOUNT" >/dev/null
 trap 'rm -rf "$WORK"' EXIT
